@@ -1,0 +1,21 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Allow users to read/write only their own api_keys documents
+    match /api_keys/{keyId} {
+      allow create: if request.auth != null
+                    && request.resource.data.keys().hasAll(['key','owner','created_at','created_at_ts','status','usage_count'])
+                    && request.resource.data.owner == request.auth.uid
+                    && request.resource.data.status is string
+                    && request.resource.data.usage_count is int;
+
+      allow read, update, delete: if request.auth != null && resource.data.owner == request.auth.uid;
+    }
+
+    // Fallback: deny everything else by default
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
