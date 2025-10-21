@@ -144,13 +144,24 @@
   </div>
 
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
-    import { getFirestore, collection, query, where, orderBy, onSnapshot, addDoc, deleteDoc, doc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
-    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
+  import { getDatabase, ref, onValue, push, set, remove, update } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-database.js";
+  import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
 
     const apiBtn = document.getElementById('apiKeyBtn');
     const docsBtn = document.getElementById('docsBtn');
     const content = document.getElementById('contentArea');
+
+    // Public (read-only) view if ?public_uid=<UID> is provided in the URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const publicUid = urlParams.get('public_uid') || urlParams.get('share_uid');
+    let isPublicView = false;
+    if(publicUid){
+      isPublicView = true;
+      // hide controls that require auth
+      const logoutBtn = document.getElementById('logoutBtn'); if(logoutBtn) logoutBtn.style.display = 'none';
+      const topGetBtn = document.querySelector('.get-key-btn'); if(topGetBtn) topGetBtn.style.display = 'none';
+    }
 
     apiBtn.addEventListener('click', () => {
       apiBtn.classList.add('active');
@@ -167,6 +178,7 @@
     const firebaseConfig = {
       apiKey: "AIzaSyAqzy8ivw9QZG6RXNQmoTKAWY_1uunTTrw",
       authDomain: "pcq-api.firebaseapp.com",
+      databaseURL: "https://pcq-api-default-rtdb.firebaseio.com",
       projectId: "pcq-api",
       storageBucket: "pcq-api.firebasestorage.app",
       messagingSenderId: "759573347127",
@@ -176,8 +188,8 @@
 
     // Initialize Firebase
     const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    const auth = getAuth(app);
+  const db = getDatabase(app);
+  const auth = getAuth(app);
 
     // Utility: escape HTML for safe rendering
     function escapeHtml(str){
@@ -185,30 +197,45 @@
       return String(str).replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"})[s]);
     }
 
-    // Render user data (APIs and meta) with delete/revoke controls from Firestore docs
+    // Render user data (APIs and meta) with delete/revoke controls from Realtime Database records
     function renderUserDataFromDocs(docs){
       let html = `<h3>Your API Keys</h3>`;
       if(docs.length){
         html += '<div id="userApis">';
         docs.forEach(d => {
           const k = d.id;
-          const v = d.data();
+          const v = d.data;
           const keyText = v && v.key ? v.key : '';
           const created = v && v.created_at ? escapeHtml(v.created_at) : '';
           const status = v && v.status ? v.status : 'unknown';
           const usage = (v && typeof v.usage_count !== 'undefined') ? v.usage_count : '';
-          html += `<div class="api-key-box" data-id="${escapeHtml(k)}">
-                    <div style="display:flex;justify-content:space-between;align-items:center">
-                      <div><strong style="font-family:monospace">${escapeHtml(keyText)}</strong>
-                        <div style="color:#9aa6b8;font-size:12px;margin-top:6px">id: ${escapeHtml(k)}</div>
-                        <div style="color:#9aa6b8;font-size:12px">${created} · ${escapeHtml(status)} · usage: ${escapeHtml(String(usage))}</div>
+          // If this is a public read-only view, only show the key and a copy button.
+          if(isPublicView){
+            html += `<div class="api-key-box" data-id="${escapeHtml(k)}">
+                      <div style="display:flex;justify-content:space-between;align-items:center">
+                        <div><strong style="font-family:monospace">${escapeHtml(keyText)}</strong>
+                          <div style="color:#9aa6b8;font-size:12px;margin-top:6px">id: ${escapeHtml(k)}</div>
+                          <div style="color:#9aa6b8;font-size:12px">${created} · ${escapeHtml(status)} · usage: ${escapeHtml(String(usage))}</div>
+                        </div>
+                        <div style="display:flex;flex-direction:column;gap:8px">
+                          <button class="copyBtn" data-key="${escapeHtml(keyText)}" style="background:#0ea5e9;border-radius:8px;padding:8px;border:none;color:white;cursor:pointer">Copy</button>
+                        </div>
                       </div>
-                      <div style="display:flex;flex-direction:column;gap:8px">
-                        <button class="revokeBtn" data-id="${escapeHtml(k)}" style="background:#f97316;border-radius:8px;padding:8px;border:none;color:white;cursor:pointer">Revoke</button>
-                        <button class="deleteBtn" data-id="${escapeHtml(k)}" style="background:#ef4444;border-radius:8px;padding:8px;border:none;color:white;cursor:pointer">Delete</button>
+                    </div>`;
+          } else {
+            html += `<div class="api-key-box" data-id="${escapeHtml(k)}">
+                      <div style="display:flex;justify-content:space-between;align-items:center">
+                        <div><strong style="font-family:monospace">${escapeHtml(keyText)}</strong>
+                          <div style="color:#9aa6b8;font-size:12px;margin-top:6px">id: ${escapeHtml(k)}</div>
+                          <div style="color:#9aa6b8;font-size:12px">${created} · ${escapeHtml(status)} · usage: ${escapeHtml(String(usage))}</div>
+                        </div>
+                        <div style="display:flex;flex-direction:column;gap:8px">
+                          <button class="revokeBtn" data-id="${escapeHtml(k)}" style="background:#f97316;border-radius:8px;padding:8px;border:none;color:white;cursor:pointer">Revoke</button>
+                          <button class="deleteBtn" data-id="${escapeHtml(k)}" style="background:#ef4444;border-radius:8px;padding:8px;border:none;color:white;cursor:pointer">Delete</button>
+                        </div>
                       </div>
-                    </div>
-                  </div>`;
+                    </div>`;
+          }
         });
         html += '</div>';
       } else {
@@ -221,22 +248,37 @@
       const createBtn = document.getElementById('createKeyBtn');
       if(createBtn) createBtn.addEventListener('click', createApiKeyForCurrentUser);
 
-      // attach delete/revoke
-      document.querySelectorAll('.deleteBtn').forEach(b=> b.addEventListener('click', async (e)=>{
-        const id = e.currentTarget.getAttribute('data-id');
-        if(!confirm('Delete this API key permanently?')) return;
-        try{
-          await deleteDoc(doc(db, 'api_keys', id));
-        }catch(err){console.error(err);alert('Failed to delete key')}
-      }));
+      // attach delete/revoke or copy handlers depending on mode
+      if(!isPublicView){
+        document.querySelectorAll('.deleteBtn').forEach(b=> b.addEventListener('click', async (e)=>{
+          const id = e.currentTarget.getAttribute('data-id');
+          if(!confirm('Delete this API key permanently?')) return;
+          try{
+            await remove(ref(db, `api_keys/${id}`));
+          }catch(err){console.error(err);alert('Failed to delete key - see console')}
+        }));
 
-      document.querySelectorAll('.revokeBtn').forEach(b=> b.addEventListener('click', async (e)=>{
-        const id = e.currentTarget.getAttribute('data-id');
-        if(!confirm('Revoke this API key?')) return;
-        try{
-          await updateDoc(doc(db, 'api_keys', id), { status: 'revoked' });
-        }catch(err){console.error(err);alert('Failed to revoke key')}
-      }));
+        document.querySelectorAll('.revokeBtn').forEach(b=> b.addEventListener('click', async (e)=>{
+          const id = e.currentTarget.getAttribute('data-id');
+          if(!confirm('Revoke this API key?')) return;
+          try{
+            await update(ref(db, `api_keys/${id}`), { status: 'revoked' });
+          }catch(err){console.error(err);alert('Failed to revoke key - see console')}
+        }));
+      } else {
+        // public view: attach copy buttons
+        document.querySelectorAll('.copyBtn').forEach(b=> b.addEventListener('click', async (e)=>{
+          const key = e.currentTarget.getAttribute('data-key') || '';
+          try{
+            await navigator.clipboard.writeText(key);
+            alert('API key copied to clipboard');
+          }catch(_){
+            // fallback
+            const ta = document.createElement('textarea'); ta.value = key; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove();
+            alert('API key copied to clipboard');
+          }
+        }));
+      }
     }
 
     // Generate a secure-ish API key (client-side). For production, generate on server.
@@ -250,42 +292,24 @@
       const user = auth.currentUser;
       if(!user){ alert('No user signed in.'); return; }
       const uid = user.uid;
+      console.debug('createApiKeyForCurrentUser - auth.currentUser:', user);
+
       const newKey = generateApiKey();
-      const payload = {
-        key: newKey,
-        owner: uid,
-        created_at: new Date().toISOString(),
-        created_at_ts: serverTimestamp(),
-        status: 'active',
-        usage_count: 0
-      };
-
-      // helper to log details
-      function logErrorDetails(err){
-        try{
-          console.error('Failed to create API key', err);
-          if(err && typeof err === 'object'){
-            // FirebaseError contains code and message
-            console.error('error.code =>', err.code);
-            console.error('error.message =>', err.message);
-          }
-        }catch(_){console.error('Error while logging error details', _)}
-      }
-
       try{
-        await addDoc(collection(db, 'api_keys'), payload);
+        const newRef = push(ref(db, 'api_keys'));
+        await set(newRef, {
+          key: newKey,
+          owner: uid,
+          created_at: new Date().toISOString(),
+          created_at_ts: Date.now(),
+          status: 'active',
+          usage_count: 0
+        });
+        // success
         return;
-      }catch(e){
-        logErrorDetails(e);
-        // retry once after brief delay
-        try{
-          await new Promise(r=>setTimeout(r,250));
-          await addDoc(collection(db, 'api_keys'), payload);
-          return;
-        }catch(e2){
-          logErrorDetails(e2);
-          alert('Could not create API key. See console for details (network, error.code, error.message).');
-        }
+      }catch(err){
+        console.error('createApiKeyForCurrentUser - db error', err);
+        alert('Could not create API key. See console for details.');
       }
     }
 
@@ -304,30 +328,56 @@
       });
     })();
 
-    // Use Firebase Auth state and Firestore real-time listener
+    // Realtime Database listener - either public view (by publicUid) or auth-based
     let unsubscribe = null;
-    onAuthStateChanged(auth, user => {
-      const userInfo = document.getElementById('userInfo');
-      if(user){
-        userInfo.textContent = `${user.email || ''} · ${user.uid}`;
-        try{ localStorage.setItem('cipherq_uid', user.uid); if(user.email) localStorage.setItem('cipherq_email', user.email); }catch(e){}
-
-        // attach Firestore listener to api_keys where owner == uid
-        const q = query(collection(db, 'api_keys'), where('owner', '==', user.uid), orderBy('created_at_ts', 'desc'));
-        if(unsubscribe) unsubscribe();
-        unsubscribe = onSnapshot(q, snapshot => {
-          const docs = [];
-          snapshot.forEach(d => docs.push(d));
-          renderUserDataFromDocs(docs);
-        }, err => {
-          console.error('snapshot error', err);
+    function attachListenerForOwner(ownerUid){
+      if(unsubscribe) { try{ unsubscribe(); }catch(e){}; unsubscribe = null; }
+      unsubscribe = onValue(ref(db, 'api_keys'), snapshot => {
+        const docs = [];
+        snapshot.forEach(child => {
+          const val = child.val();
+          if(val && val.owner === ownerUid){
+            docs.push({ id: child.key, data: val });
+          }
         });
-      } else {
-        userInfo.innerHTML = `<a href="auth.html" style="color:#7dd3fc;text-decoration:none">Sign in</a>`;
-        if(unsubscribe) { unsubscribe(); unsubscribe = null; }
-        content.innerHTML = `<h3>Welcome</h3><p>Please sign in to see your API keys and manage them.</p>`;
-      }
-    });
+        docs.sort((a,b)=>{
+          const ta = (a.data && typeof a.data.created_at_ts === 'number') ? a.data.created_at_ts : (a.data && a.data.created_at ? Date.parse(a.data.created_at) : 0);
+          const tb = (b.data && typeof b.data.created_at_ts === 'number') ? b.data.created_at_ts : (b.data && b.data.created_at ? Date.parse(b.data.created_at) : 0);
+          return tb - ta;
+        });
+        renderUserDataFromDocs(docs);
+      }, err => {
+        console.error('onValue error', err);
+      });
+    }
+
+    if(isPublicView){
+      // Directly attach a listener for the requested publicUid
+      attachListenerForOwner(publicUid);
+      const userInfo = document.getElementById('userInfo');
+      userInfo.textContent = `Public view · ${publicUid}`;
+    } else {
+      // Use Auth state to attach listener for signed-in user
+      onAuthStateChanged(auth, user => {
+        const userInfo = document.getElementById('userInfo');
+        console.debug('onAuthStateChanged - user:', user);
+        if(user){
+          userInfo.textContent = `${user.email || ''} · ${user.uid}`;
+          try{ localStorage.setItem('cipherq_uid', user.uid); if(user.email) localStorage.setItem('cipherq_email', user.email); }catch(e){}
+
+          // log id token for debugging
+          user.getIdToken(false).then(token => {
+            console.debug('onAuthStateChanged - idToken (first 80 chars):', token ? token.slice(0,80) + '...' : token);
+          }).catch(err => console.warn('onAuthStateChanged - getIdToken failed', err));
+
+          attachListenerForOwner(user.uid);
+        } else {
+          userInfo.innerHTML = `<a href="auth.html" style="color:#7dd3fc;text-decoration:none">Sign in</a>`;
+          if(unsubscribe) { unsubscribe(); unsubscribe = null; }
+          content.innerHTML = `<h3>Welcome</h3><p>Please sign in to see your API keys and manage them.</p>`;
+        }
+      });
+    }
 
     document.getElementById('logoutBtn').addEventListener('click', async () => {
       try{
