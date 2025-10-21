@@ -266,6 +266,21 @@
       }
     }
 
+    // wire the top-bar Get API Key button to create a key for convenience
+    (function wireTopGetKey(){
+      const topBtn = document.querySelector('.get-key-btn');
+      if(!topBtn) return;
+      topBtn.addEventListener('click', async (e) => {
+        // disable briefly to prevent double clicks
+        topBtn.disabled = true;
+        try {
+          await createApiKeyForCurrentUser();
+        } finally {
+          setTimeout(()=> topBtn.disabled = false, 800);
+        }
+      });
+    })();
+
     // Use Firebase Auth state and Firestore real-time listener
     let unsubscribe = null;
     onAuthStateChanged(auth, user => {
