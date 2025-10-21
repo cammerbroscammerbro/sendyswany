@@ -145,7 +145,7 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
-    import { getDatabase, ref, get, set, onValue, push, remove } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-database.js";
+    import { getFirestore, collection, query, where, orderBy, onSnapshot, addDoc, deleteDoc, doc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
 
     const apiBtn = document.getElementById('apiKeyBtn');
@@ -167,7 +167,6 @@
     const firebaseConfig = {
       apiKey: "AIzaSyAqzy8ivw9QZG6RXNQmoTKAWY_1uunTTrw",
       authDomain: "pcq-api.firebaseapp.com",
-      databaseURL: "https://pcq-api-default-rtdb.firebaseio.com",
       projectId: "pcq-api",
       storageBucket: "pcq-api.firebasestorage.app",
       messagingSenderId: "759573347127",
@@ -177,7 +176,7 @@
 
     // Initialize Firebase
     const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
+    const db = getFirestore(app);
     const auth = getAuth(app);
 
     // Utility: escape HTML for safe rendering
@@ -186,20 +185,23 @@
       return String(str).replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"})[s]);
     }
 
-    // Render user data (APIs and meta) with delete/revoke controls
-    function renderUserData(data){
-      const apis = data && data.apis ? data.apis : {};
+    // Render user data (APIs and meta) with delete/revoke controls from Firestore docs
+    function renderUserDataFromDocs(docs){
       let html = `<h3>Your API Keys</h3>`;
-      if(Object.keys(apis).length){
+      if(docs.length){
         html += '<div id="userApis">';
-        Object.entries(apis).forEach(([k,v]) => {
-          const keyText = (v && v.key) ? v.key : (typeof v === 'string' ? v : '');
-          const created = v && v.createdAt ? new Date(v.createdAt).toLocaleString() : '';
+        docs.forEach(d => {
+          const k = d.id;
+          const v = d.data();
+          const keyText = v && v.key ? v.key : '';
+          const created = v && v.created_at ? escapeHtml(v.created_at) : '';
+          const status = v && v.status ? v.status : 'unknown';
+          const usage = (v && typeof v.usage_count !== 'undefined') ? v.usage_count : '';
           html += `<div class="api-key-box" data-id="${escapeHtml(k)}">
                     <div style="display:flex;justify-content:space-between;align-items:center">
                       <div><strong style="font-family:monospace">${escapeHtml(keyText)}</strong>
                         <div style="color:#9aa6b8;font-size:12px;margin-top:6px">id: ${escapeHtml(k)}</div>
-                        <div style="color:#9aa6b8;font-size:12px">${escapeHtml(created)}</div>
+                        <div style="color:#9aa6b8;font-size:12px">${created} · ${escapeHtml(status)} · usage: ${escapeHtml(String(usage))}</div>
                       </div>
                       <div style="display:flex;flex-direction:column;gap:8px">
                         <button class="revokeBtn" data-id="${escapeHtml(k)}" style="background:#f97316;border-radius:8px;padding:8px;border:none;color:white;cursor:pointer">Revoke</button>
@@ -214,11 +216,6 @@
         html += `<button id="createKeyBtn" class="get-key-btn">Create API Key</button>`;
       }
 
-      // Additional metadata
-      if(data && data.email){
-        html += `<p style="margin-top:12px;color:#9aa6b8;font-size:13px">Account: ${escapeHtml(data.email)}</p>`;
-      }
-
       content.innerHTML = html;
 
       const createBtn = document.getElementById('createKeyBtn');
@@ -229,20 +226,15 @@
         const id = e.currentTarget.getAttribute('data-id');
         if(!confirm('Delete this API key permanently?')) return;
         try{
-          const uid = auth.currentUser && auth.currentUser.uid;
-          if(!uid) throw new Error('Not authenticated');
-          await remove(ref(db, `users/${uid}/apis/${id}`));
+          await deleteDoc(doc(db, 'api_keys', id));
         }catch(err){console.error(err);alert('Failed to delete key')}
       }));
 
       document.querySelectorAll('.revokeBtn').forEach(b=> b.addEventListener('click', async (e)=>{
         const id = e.currentTarget.getAttribute('data-id');
-        if(!confirm('Revoke this API key (will delete it)?')) return;
+        if(!confirm('Revoke this API key?')) return;
         try{
-          const uid = auth.currentUser && auth.currentUser.uid;
-          if(!uid) throw new Error('Not authenticated');
-          // For now revoke == delete. In future we can add a 'revoked:true' flag.
-          await remove(ref(db, `users/${uid}/apis/${id}`));
+          await updateDoc(doc(db, 'api_keys', id), { status: 'revoked' });
         }catch(err){console.error(err);alert('Failed to revoke key')}
       }));
     }
@@ -259,52 +251,42 @@
       if(!user){ alert('No user signed in.'); return; }
       const uid = user.uid;
       const newKey = generateApiKey();
-      const payload = { key: newKey, createdAt: Date.now() };
       try{
-        await push(ref(db, `users/${uid}/apis`), payload);
+        await addDoc(collection(db, 'api_keys'), {
+          key: newKey,
+          owner: uid,
+          created_at: new Date().toISOString(),
+          created_at_ts: serverTimestamp(),
+          status: 'active',
+          usage_count: 0
+        });
       }catch(e){
         console.error('Failed to create API key', e);
         alert('Could not create API key. Check console for details.');
       }
     }
 
-    // Fetch user record and attach realtime listener (same as before)
-    function fetchAndListenUser(uid){
-      try{
-        const userRef = ref(db, `users/${uid}`);
-        // initial get + create-if-missing
-        get(userRef).then(snapshot => {
-          if(snapshot.exists()){
-            renderUserData(snapshot.val());
-          } else {
-            // create minimal record
-            const initial = { email: (auth.currentUser && auth.currentUser.email) || localStorage.getItem('cipherq_email') || '', createdAt: Date.now(), apis: {} };
-            set(userRef, initial).then(()=> renderUserData(initial)).catch(e=>console.error('set user record failed', e));
-          }
-        }).catch(e=>console.error('get user failed', e));
-
-        // realtime updates
-        onValue(userRef, snap => {
-          if(snap.exists()) renderUserData(snap.val());
-        });
-      }catch(e){
-        console.warn('Failed to fetch/listen user', e);
-      }
-    }
-
-    // Use Firebase Auth state instead of localStorage for authoritative identity
+    // Use Firebase Auth state and Firestore real-time listener
+    let unsubscribe = null;
     onAuthStateChanged(auth, user => {
       const userInfo = document.getElementById('userInfo');
       if(user){
-        // show email and uid
         userInfo.textContent = `${user.email || ''} · ${user.uid}`;
-        // ensure localStorage still set for older flows
         try{ localStorage.setItem('cipherq_uid', user.uid); if(user.email) localStorage.setItem('cipherq_email', user.email); }catch(e){}
-        // start DB listener
-        fetchAndListenUser(user.uid);
+
+        // attach Firestore listener to api_keys where owner == uid
+        const q = query(collection(db, 'api_keys'), where('owner', '==', user.uid), orderBy('created_at_ts', 'desc'));
+        if(unsubscribe) unsubscribe();
+        unsubscribe = onSnapshot(q, snapshot => {
+          const docs = [];
+          snapshot.forEach(d => docs.push(d));
+          renderUserDataFromDocs(docs);
+        }, err => {
+          console.error('snapshot error', err);
+        });
       } else {
         userInfo.innerHTML = `<a href="auth.html" style="color:#7dd3fc;text-decoration:none">Sign in</a>`;
-        // clear UI
+        if(unsubscribe) { unsubscribe(); unsubscribe = null; }
         content.innerHTML = `<h3>Welcome</h3><p>Please sign in to see your API keys and manage them.</p>`;
       }
     });
@@ -320,3 +302,4 @@
 
 </body>
 </html>
+
