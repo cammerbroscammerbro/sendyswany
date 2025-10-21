@@ -251,18 +251,41 @@
       if(!user){ alert('No user signed in.'); return; }
       const uid = user.uid;
       const newKey = generateApiKey();
+      const payload = {
+        key: newKey,
+        owner: uid,
+        created_at: new Date().toISOString(),
+        created_at_ts: serverTimestamp(),
+        status: 'active',
+        usage_count: 0
+      };
+
+      // helper to log details
+      function logErrorDetails(err){
+        try{
+          console.error('Failed to create API key', err);
+          if(err && typeof err === 'object'){
+            // FirebaseError contains code and message
+            console.error('error.code =>', err.code);
+            console.error('error.message =>', err.message);
+          }
+        }catch(_){console.error('Error while logging error details', _)}
+      }
+
       try{
-        await addDoc(collection(db, 'api_keys'), {
-          key: newKey,
-          owner: uid,
-          created_at: new Date().toISOString(),
-          created_at_ts: serverTimestamp(),
-          status: 'active',
-          usage_count: 0
-        });
+        await addDoc(collection(db, 'api_keys'), payload);
+        return;
       }catch(e){
-        console.error('Failed to create API key', e);
-        alert('Could not create API key. Check console for details.');
+        logErrorDetails(e);
+        // retry once after brief delay
+        try{
+          await new Promise(r=>setTimeout(r,250));
+          await addDoc(collection(db, 'api_keys'), payload);
+          return;
+        }catch(e2){
+          logErrorDetails(e2);
+          alert('Could not create API key. See console for details (network, error.code, error.message).');
+        }
       }
     }
 
