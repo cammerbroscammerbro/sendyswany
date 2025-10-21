@@ -4,6 +4,20 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CipherQ | Quantum-Safe Encryption</title>
+  <script>
+    // If the user has previously logged in once, `auth.html` stores their uid in localStorage
+    // Redirect returning users straight to the dashboard to skip the landing page.
+    try {
+      const prevUid = localStorage.getItem('cipherq_uid');
+      if (prevUid) {
+        // immediate redirect before the page fully renders
+        window.location.href = 'dashbord.html';
+      }
+    } catch (e) {
+      // ignore errors (e.g., localStorage disabled)
+      console.warn('localStorage check failed', e);
+    }
+  </script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -329,3 +343,4 @@ console.log(await res.json());
   </script>
 </body>
 </html>
+
