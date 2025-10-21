@@ -1,0 +1,59 @@
+⚡ Cipher QU — Landing Page Concept Summary
+🎨 Theme & Feel
+
+Background: Deep matte black / coal black — sleek, minimal, futuristic.
+
+Mood: Quantum, secure, mysterious — with subtle sci-fi elements.
+
+Style Inspiration: Google AI Studio × Stripe × Quantum tech aesthetics.
+
+🧱 Layout Structure
+🔹 Header (Top Bar)
+
+Left: Cipher QU logo (glowing or animated “CQ” symbol).
+
+Right: Three buttons — Docs, Signup, Login.
+
+Modern minimal style, glowing on hover.
+
+Aligned like Google’s or OpenAI’s clean navbar.
+
+🔹 Hero Section (Main Focus)
+
+Centerpiece Animation:
+
+Large text that types out “Cipher QU”, then smoothly transitions into its encrypted form (hash-like), then decrypts back again — looping.
+
+Represents encryption ↔ decryption visually.
+
+Subtext (Tagline):
+“Quantum-Safe Encryption for the Post-Classical Web” (or similar).
+
+Under that: Optional “Try it” command-line block showing
+
+curl https://cipherqu.tech/encrypt ...
+
+
+selectable for instant testing.
+
+🔹 Background Animation
+
+Floating encrypted letters/symbols (like 0x1F, A9, D3) slowly drifting.
+
+Small glowing particles try to intercept them but fade before reaching — symbolizing quantum-safe protection.
+
+Subtle motion, no clutter, cinematic feel.
+
+🔹 Persistent Badge
+
+At bottom or corner:
+🧬 Quantum-Safe • Verified
+– softly glowing, pulsing for presence and trust.
+
+🪄 Overall Vibe
+
+Futuristic, cinematic, and intelligent.
+
+Instantly tells visitors: “This is advanced, secure, and built for the future.”
+
+Developer-friendly yet visually iconic — feels like a product that could power the next internet layer.

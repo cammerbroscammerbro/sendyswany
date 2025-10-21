@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CipherQ | Quantum-Safe Encryption</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background-color: #0a0a0a;
+      color: #fff;
+      font-family: "Poppins", sans-serif;
+      overflow-x: hidden;
+      scroll-behavior: smooth;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 25px 70px;
+      position: fixed;
+      width: 100%;
+      top: 0;
+      z-index: 10;
+      backdrop-filter: blur(6px);
+    }
+
+    .logo {
+      font-size: 1.6rem;
+      font-weight: 600;
+      letter-spacing: 1px;
+    }
+
+    .nav-buttons {
+      display: flex;
+      gap: 20px;
+    }
+
+    .nav-buttons button {
+      background: none;
+      border: 1px solid #2a2a2a;
+      color: white;
+      padding: 10px 22px;
+      border-radius: 8px;
+      font-size: 15px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .nav-buttons button:hover {
+      background: #007bff;
+      border-color: #007bff;
+    }
+
+    .hero {
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      text-align: center;
+      position: relative;
+      padding: 0 20px;
+    }
+
+    .hero h1 {
+      font-size: 4rem;
+      font-weight: 600;
+      margin-bottom: 15px;
+    }
+
+    .hero h2 {
+      font-size: 1.2rem;
+      font-weight: 300;
+      color: #aaa;
+      margin-bottom: 50px;
+    }
+
+    .hero .action-btns {
+      display: flex;
+      gap: 20px;
+    }
+
+    .hero .action-btns button {
+      background: #007bff;
+      border: none;
+      color: white;
+      padding: 12px 26px;
+      font-size: 15px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .hero .action-btns button.secondary {
+      background: transparent;
+      border: 1px solid #333;
+    }
+
+    .hero .action-btns button:hover {
+      background: #0056b3;
+    }
+
+    .typing {
+      border-right: 2px solid #007bff;
+      white-space: nowrap;
+      overflow: hidden;
+      animation: blink 0.7s infinite;
+    }
+
+    @keyframes blink {
+      50% { border-color: transparent; }
+    }
+
+    section {
+      padding: 100px 80px;
+      max-width: 1200px;
+      margin: auto;
+    }
+
+    section h3 {
+      font-size: 2.2rem;
+      font-weight: 500;
+      margin-bottom: 30px;
+      text-align: center;
+    }
+
+    section p {
+      font-size: 1rem;
+      color: #bbb;
+      line-height: 1.8;
+      text-align: center;
+      margin-bottom: 50px;
+    }
+
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 30px;
+      margin-top: 30px;
+    }
+
+    .feature {
+      background: #111;
+      padding: 30px;
+      border-radius: 12px;
+      border: 1px solid #1a1a1a;
+      transition: all 0.3s ease;
+    }
+
+    .feature:hover {
+      border-color: #007bff;
+      transform: translateY(-5px);
+    }
+
+    .feature h4 {
+      font-size: 1.3rem;
+      margin-bottom: 15px;
+    }
+
+    .feature p {
+      color: #aaa;
+      font-size: 0.95rem;
+    }
+
+    pre {
+      background: #111;
+      color: #00b3ff;
+      padding: 20px;
+      border-radius: 10px;
+      overflow-x: auto;
+      font-size: 0.9rem;
+      border: 1px solid #1a1a1a;
+    }
+
+    footer {
+      text-align: center;
+      padding: 50px 0;
+      background: #0a0a0a;
+      color: #555;
+      border-top: 1px solid #111;
+    }
+
+    .particles {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      overflow: hidden;
+    }
+
+    .particle {
+      position: absolute;
+      width: 4px;
+      height: 4px;
+      background: rgba(0, 123, 255, 0.4);
+      border-radius: 50%;
+      animation: float 10s linear infinite;
+    }
+
+    @keyframes float {
+      from { transform: translateY(0) rotate(0deg); opacity: 1; }
+      to { transform: translateY(-1000px) rotate(720deg); opacity: 0; }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="logo">CipherQ</div>
+    <div class="nav-buttons">
+      <button onclick="window.location.href='auth.html'">Login</button>
+      <button onclick="window.location.href='auth.html'">Sign Up</button>
+  <button onclick="window.location.href='doc.html'">Docs</button>
+    </div>
+  </header>
+
+  <div class="hero">
+    <div class="particles" id="particles"></div>
+    <h1><span id="typing" class="typing"></span></h1>
+    <h2>Quantum-Safe Encryption for the Next Era</h2>
+    <div class="action-btns">
+      <button onclick="window.location.href='auth.html'">Get Started</button>
+      <button class="secondary" onclick="document.querySelector('#about').scrollIntoView({behavior:'smooth'})">Learn More</button>
+    </div>
+  </div>
+
+  <section id="about">
+    <h3>About CipherQ</h3>
+    <p>CipherQ is a post-quantum encryption API designed for developers and businesses that want to secure their data against future quantum attacks. Our platform ensures that your communication, APIs, and databases remain safe even in a post-quantum world.</p>
+  </section>
+
+  <section id="features">
+    <h3>Why CipherQ?</h3>
+    <div class="features">
+      <div class="feature">
+        <h4>Quantum-Resistant Algorithms</h4>
+        <p>Built using lattice-based and code-based cryptography, ensuring future-proof protection.</p>
+      </div>
+      <div class="feature">
+        <h4>Developer-Friendly</h4>
+        <p>Integrate easily using REST APIs, SDKs, and plug-and-play encryption for any project.</p>
+      </div>
+      <div class="feature">
+        <h4>Performance Focused</h4>
+        <p>Optimized for speed and low latency without compromising security or data integrity.</p>
+      </div>
+      <div class="feature">
+        <h4>Scalable & Secure</h4>
+        <p>Enterprise-level encryption with simple pricing and easy-to-scale architecture.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="docs">
+    <h3>Quick Start</h3>
+    <p>Try CipherQ instantly. Encrypt or decrypt data through our API.</p>
+
+    <pre>
+# Curl Example
+curl -X POST https://api.cipherq.tech/encrypt \
+-H "Content-Type: application/json" \
+-d '{"text":"hello world"}'
+
+# Python Example
+import requests
+res = requests.post("https://api.cipherq.tech/encrypt", json={"text": "hello world"})
+print(res.json())
+
+# JavaScript Example
+const res = await fetch("https://api.cipherq.tech/encrypt", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ text: "hello world" })
+});
+console.log(await res.json());
+    </pre>
+  </section>
+
+  <footer>
+    <p>© 2025 CipherQ. All Rights Reserved. | Quantum-Safe Encryption for Everyone.</p>
+  </footer>
+
+  <script>
+    // Typing Effect Between Encrypted and Decrypted Name
+    const typingElement = document.getElementById("typing");
+    const texts = ["CipherQ", "6f7b91xC93dAQ=="];
+    let textIndex = 0;
+    let charIndex = 0;
+    let isDeleting = false;
+
+    function type() {
+      const current = texts[textIndex];
+      const displayed = current.substring(0, charIndex);
+      typingElement.textContent = displayed;
+
+      if (!isDeleting && charIndex < current.length) {
+        charIndex++;
+        setTimeout(type, 120);
+      } else if (isDeleting && charIndex > 0) {
+        charIndex--;
+        setTimeout(type, 60);
+      } else {
+        if (!isDeleting) {
+          setTimeout(() => (isDeleting = true), 1000);
+        } else {
+          isDeleting = false;
+          textIndex = (textIndex + 1) % texts.length;
+        }
+        setTimeout(type, 1000);
+      }
+    }
+    type();
+
+    // Particle generator
+    const particlesContainer = document.getElementById("particles");
+    for (let i = 0; i < 40; i++) {
+      const p = document.createElement("div");
+      p.classList.add("particle");
+      p.style.left = Math.random() * 100 + "%";
+      p.style.top = Math.random() * 100 + "%";
+      p.style.animationDuration = 5 + Math.random() * 10 + "s";
+      p.style.width = p.style.height = 2 + Math.random() * 3 + "px";
+      particlesContainer.appendChild(p);
+    }
+  </script>
+</body>
+</html>

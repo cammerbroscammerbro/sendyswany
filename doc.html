@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CipherQ Documentation</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <style>
+    /* Matte black background */
+    body { background-color: #070707; color: #e6eef8; font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif; }
+    pre, code { background:#0b0b0b; color:#cfe8ff; border-radius:8px; padding:10px; display:block; }
+    .section { margin-top:2.5rem }
+    .copy-btn{background:#0b1220;color:#dbe7ff;padding:6px 8px;border-radius:6px;border:1px solid rgba(255,255,255,0.04);cursor:pointer}
+    .lang-bar{display:flex;gap:8px;background:#0b0f13;padding:6px;border-radius:8px}
+    .lang-bar button{background:transparent;color:#bcd7ff;padding:8px 12px;border-radius:6px;border:0;cursor:pointer}
+    .lang-bar button.active{background:#132032;color:#fff}
+  </style>
+</head>
+<body class="px-6 md:px-20 py-10">
+  <header class="flex justify-between items-center mb-10">
+    <h1 class="text-2xl font-semibold text-sky-300">CipherQ</h1>
+    <nav class="space-x-6 text-sky-300">
+      <a href="#">Docs</a>
+      <a href="#">Signup</a>
+      <a href="#">Login</a>
+    </nav>
+  </header>
+
+  <section>
+    <h2 class="text-3xl font-semibold mb-2">Quantum-safe Encryption API</h2>
+    <p class="text-slate-400">Secure your data with post-quantum cryptography. Built for developers who need forward-secure protection.</p>
+  </section>
+
+  <section class="section">
+    <h3 class="text-xl font-medium mb-2">Authentication</h3>
+    <p>All requests require an API key in the header. Manage keys in the CipherQ Dashboard.</p>
+    <div style="position:relative;margin-top:8px">
+      <pre id="auth-code"><code>X-API-KEY: your_api_key_here</code></pre>
+      <button class="copy-btn" data-copy-target="#auth-code" style="position:absolute;right:8px;top:8px">Copy</button>
+    </div>
+  </section>
+
+  <section class="section">
+    <h3 class="text-xl font-medium mb-2">Base URL</h3>
+    <div style="position:relative;margin-top:8px">
+      <pre id="base-url"><code>https://final-test-1-rger.onrender.com</code></pre>
+      <button class="copy-btn" data-copy-target="#base-url" style="position:absolute;right:8px;top:8px">Copy</button>
+    </div>
+  </section>
+
+  <section class="section">
+    <h3 class="text-xl font-medium mb-2">POST /encrypt</h3>
+    <p>Encrypt plaintext using quantum-resistant algorithms.</p>
+    <div style="position:relative;margin-top:8px">
+      <pre id="encrypt-ep"><code>POST /encrypt</code></pre>
+      <button class="copy-btn" data-copy-target="#encrypt-ep" style="position:absolute;right:8px;top:8px">Copy</button>
+    </div>
+    <p class="mt-3">Body</p>
+    <div style="position:relative;margin-top:8px">
+      <pre id="encrypt-body"><code>{
+  "message": "Hello Quantum!"
+}</code></pre>
+      <button class="copy-btn" data-copy-target="#encrypt-body" style="position:absolute;right:8px;top:8px">Copy</button>
+    </div>
+    <p class="mt-3">Response</p>
+    <div style="position:relative;margin-top:8px">
+      <pre id="encrypt-res"><code>{
+  "ciphertext": "k29dkad923..",
+  "key": "QSAFE-8392X...",
+  "algorithm": "QuantumHybrid256"
+}</code></pre>
+      <button class="copy-btn" data-copy-target="#encrypt-res" style="position:absolute;right:8px;top:8px">Copy</button>
+    </div>
+  </section>
+
+  <section class="section">
+    <h3 class="text-xl font-medium mb-2">POST /decrypt</h3>
+    <p>Decrypt ciphertext with a provided key.</p>
+    <div style="position:relative;margin-top:8px">
+      <pre id="decrypt-ep"><code>POST /decrypt</code></pre>
+      <button class="copy-btn" data-copy-target="#decrypt-ep" style="position:absolute;right:8px;top:8px">Copy</button>
+    </div>
+    <p class="mt-3">Body</p>
+    <div style="position:relative;margin-top:8px">
+      <pre id="decrypt-body"><code>{
+  "ciphertext": "k29dkad923..",
+  "key": "QSAFE-8392X..."
+}</code></pre>
+      <button class="copy-btn" data-copy-target="#decrypt-body" style="position:absolute;right:8px;top:8px">Copy</button>
+    </div>
+  </section>
+
+  <section class="section">
+    <h3 class="text-xl font-medium mb-4">Usage Examples</h3>
+    <div class="lang-bar" role="tablist" aria-label="Language examples">
+      <button class="active" data-lang="python">Python</button>
+      <button data-lang="node">Node.js</button>
+      <button data-lang="curl">cURL</button>
+    </div>
+
+    <div id="examples" class="mt-4">
+      <div data-lang-panel="python">
+        <div style="position:relative">
+          <pre id="py-ex"><code>import requests
+
+url = "https://final-test-1-rger.onrender.com/encrypt"
+headers = {"Content-Type": "application/json", "X-API-KEY": "your_api_key"}
+data = {"message": "hello quantum"}
+res = requests.post(url, headers=headers, json=data)
+print(res.json())</code></pre>
+          <button class="copy-btn" data-copy-target="#py-ex" style="position:absolute;right:8px;top:8px">Copy</button>
+        </div>
+      </div>
+
+      <div data-lang-panel="node" style="display:none">
+        <div style="position:relative">
+          <pre id="node-ex"><code>import fetch from "node-fetch";
+
+const res = await fetch("https://final-test-1-rger.onrender.com/encrypt", {
+  method: "POST",
+  headers: {"Content-Type": "application/json", "X-API-KEY": "your_api_key"},
+  body: JSON.stringify({ message: "hello quantum" })
+});
+
+console.log(await res.json());</code></pre>
+          <button class="copy-btn" data-copy-target="#node-ex" style="position:absolute;right:8px;top:8px">Copy</button>
+        </div>
+      </div>
+
+      <div data-lang-panel="curl" style="display:none">
+        <div style="position:relative">
+          <pre id="curl-ex"><code>curl -X POST https://final-test-1-rger.onrender.com/encrypt \
+-H "Content-Type: application/json" \
+-H "X-API-KEY: your_api_key" \
+-d '{"message": "hello quantum"}'</code></pre>
+          <button class="copy-btn" data-copy-target="#curl-ex" style="position:absolute;right:8px;top:8px">Copy</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <h3 class="text-xl font-medium mb-2">Error Codes</h3>
+    <div style="position:relative">
+      <pre id="errors"><code>200  Success        Operation completed successfully
+400  Bad Request    Missing or invalid input
+401  Unauthorized   Invalid or missing API key
+500  Server Error   Internal error (contact support)</code></pre>
+      <button class="copy-btn" data-copy-target="#errors" style="position:absolute;right:8px;top:8px">Copy</button>
+    </div>
+  </section>
+
+  <footer class="section text-slate-400 border-t border-slate-800 pt-6 mt-10">
+    <p>© 2025 CipherQ. Quantum-safe API.</p>
+    <p>Contact: <a href="mailto:support@cipherq.tech" class="text-sky-300">support@cipherq.tech</a></p>
+  </footer>
+
+  <script>
+    // Copy button handler
+    document.querySelectorAll('.copy-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const target = document.querySelector(btn.dataset.copyTarget);
+        if(!target) return;
+        const text = target.innerText;
+        try{
+          await navigator.clipboard.writeText(text);
+          btn.textContent = 'Copied';
+          setTimeout(()=> btn.textContent = 'Copy', 1200);
+        }catch(e){
+          console.error('copy failed', e);
+        }
+      })
+    });
+
+    // Language tabs
+    document.querySelectorAll('.lang-bar button').forEach(b => {
+      b.addEventListener('click', ()=>{
+        document.querySelectorAll('.lang-bar button').forEach(x=>x.classList.remove('active'));
+        b.classList.add('active');
+        const lang = b.dataset.lang;
+        document.querySelectorAll('[data-lang-panel]').forEach(p => p.style.display = p.getAttribute('data-lang-panel') === lang ? '' : 'none');
+      });
+    });
+  </script>
+</body>
+</html>
