@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CipherQ Documentation</title>
+  <link rel="icon" href="/image__3_-removebg-preview.png" type="image/png">
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <style>
     /* Matte black background */
@@ -43,7 +44,7 @@
   <section class="section">
     <h3 class="text-xl font-medium mb-2">Base URL</h3>
     <div style="position:relative;margin-top:8px">
-      <pre id="base-url"><code>https://final-test-1-rger.onrender.com</code></pre>
+  <pre id="base-url"><code>https://api.cipherq.fronti.tech</code></pre>
       <button class="copy-btn" data-copy-target="#base-url" style="position:absolute;right:8px;top:8px">Copy</button>
     </div>
   </section>
@@ -103,7 +104,7 @@
         <div style="position:relative">
           <pre id="py-ex"><code>import requests
 
-url = "https://final-test-1-rger.onrender.com/encrypt"
+url = "https://api.cipherq.fronti.tech/encrypt"
 headers = {"Content-Type": "application/json", "X-API-KEY": "your_api_key"}
 data = {"message": "hello quantum"}
 res = requests.post(url, headers=headers, json=data)
@@ -116,7 +117,7 @@ print(res.json())</code></pre>
         <div style="position:relative">
           <pre id="node-ex"><code>import fetch from "node-fetch";
 
-const res = await fetch("https://final-test-1-rger.onrender.com/encrypt", {
+const res = await fetch("https://api.cipherq.fronti.tech/encrypt", {
   method: "POST",
   headers: {"Content-Type": "application/json", "X-API-KEY": "your_api_key"},
   body: JSON.stringify({ message: "hello quantum" })
@@ -129,7 +130,7 @@ console.log(await res.json());</code></pre>
 
       <div data-lang-panel="curl" style="display:none">
         <div style="position:relative">
-          <pre id="curl-ex"><code>curl -X POST https://final-test-1-rger.onrender.com/encrypt \
+          <pre id="curl-ex"><code>curl -X POST https://api.cipherq.fronti.tech/encrypt \
 -H "Content-Type: application/json" \
 -H "X-API-KEY: your_api_key" \
 -d '{"message": "hello quantum"}'</code></pre>
