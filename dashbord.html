@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -147,6 +149,17 @@
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
   import { getDatabase, ref, onValue, set, remove, update } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-database.js";
   import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
+
+    // Set a pretty URL (no .html) for this page client-side.
+    // Note: direct navigation to /dashbord still requires server support; this only rewrites the URL after load.
+    try{
+      const cur = new URL(window.location.href);
+      const qs = cur.search || '';
+      const pretty = '/dashbord' + qs;
+      if(location.pathname + location.search !== pretty){
+        history.replaceState(null, '', pretty);
+      }
+    }catch(e){ /* ignore */ }
 
     const apiBtn = document.getElementById('apiKeyBtn');
     const docsBtn = document.getElementById('docsBtn');
@@ -400,4 +413,3 @@
 
 </body>
 </html>
-
