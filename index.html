@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CipherQ | Quantum-Safe Encryption</title>
+  <link rel="icon" href="/image__3_-removebg-preview.png" type="image/png">
   <script>
     // If the user has previously logged in once, `auth.html` stores their uid in localStorage
     // Redirect returning users straight to the dashboard to skip the landing page.
@@ -275,17 +276,17 @@
 
     <pre>
 # Curl Example
-curl -X POST https://api.cipherq.tech/encrypt \
+curl -X POST https://api.cipherq.fronti.tech/encrypt \
 -H "Content-Type: application/json" \
 -d '{"text":"hello world"}'
 
 # Python Example
 import requests
-res = requests.post("https://api.cipherq.tech/encrypt", json={"text": "hello world"})
+res = requests.post("https://api.cipherq.fronti.tech/encrypt", json={"text": "hello world"})
 print(res.json())
 
 # JavaScript Example
-const res = await fetch("https://api.cipherq.tech/encrypt", {
+const res = await fetch("https://api.cipherq.fronti.tech/encrypt", {
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({ text: "hello world" })
