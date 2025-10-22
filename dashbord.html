@@ -163,6 +163,43 @@
       const topGetBtn = document.querySelector('.get-key-btn'); if(topGetBtn) topGetBtn.style.display = 'none';
     }
 
+    // --- Create Key Modal markup (injected) ---
+    (function insertCreateKeyModal(){
+      const modalHtml = `
+        <div id="createKeyModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);align-items:center;justify-content:center;z-index:9999">
+          <div style="background:#0b0b0b;padding:20px;border-radius:12px;border:1px solid #222;min-width:320px;color:#e6eef8">
+            <h3 style="margin-top:0">Generate API Key</h3>
+            <div style="margin:8px 0"><label style="font-size:13px;color:#9aa6b8">Name</label>
+              <input id="newKeyName" style="width:100%;padding:10px;margin-top:6px;border-radius:8px;border:1px solid #222;background:#061017;color:#fff" placeholder="e.g. My App Server"></div>
+            <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
+              <button id="cancelCreateKey" style="background:transparent;border:1px solid #333;padding:8px 12px;border-radius:8px;color:#cfe8ff">Cancel</button>
+              <button id="confirmCreateKey" style="background:#06b6d4;border:none;padding:8px 12px;border-radius:8px;color:#04283a">Generate</button>
+            </div>
+            <div id="createKeyMsg" style="margin-top:8px;color:#9aa6b8;font-size:13px"></div>
+          </div>
+        </div>`;
+      document.body.insertAdjacentHTML('beforeend', modalHtml);
+      document.getElementById('cancelCreateKey').addEventListener('click', ()=>{ document.getElementById('createKeyModal').style.display='none'; });
+      document.getElementById('confirmCreateKey').addEventListener('click', async ()=>{
+        const name = (document.getElementById('newKeyName').value || '').trim();
+        if(!name){ document.getElementById('createKeyMsg').textContent = 'Please provide a name.'; return; }
+        document.getElementById('createKeyMsg').textContent = 'Generating...';
+        try{
+          await createApiKeyForCurrentUser(name);
+          document.getElementById('createKeyMsg').textContent = 'API key created.';
+          setTimeout(()=>{ document.getElementById('createKeyModal').style.display='none'; document.getElementById('newKeyName').value=''; }, 700);
+        }catch(err){
+          console.error('create key failed', err);
+          document.getElementById('createKeyMsg').textContent = 'Failed to create key';
+        }
+      });
+    })();
+
+    function showCreateKeyModal(){
+      const modal = document.getElementById('createKeyModal');
+      if(modal) modal.style.display = 'flex';
+    }
+
     apiBtn.addEventListener('click', () => {
       apiBtn.classList.add('active');
       docsBtn.classList.remove('active');
@@ -207,36 +244,25 @@
             const v = d.data;
             // when keys are stored with the key as the node, fall back to the id
             const keyText = v && v.key ? v.key : k;
+            const name = v && v.name ? v.name : (v && v.display_name ? v.display_name : ('Key ' + escapeHtml(k.slice(0,6))));
           const created = v && v.created_at ? escapeHtml(v.created_at) : '';
           const status = v && v.status ? v.status : 'unknown';
           const usage = (v && typeof v.usage_count !== 'undefined') ? v.usage_count : '';
-          // If this is a public read-only view, only show the key and a copy button.
-          if(isPublicView){
-            html += `<div class="api-key-box" data-id="${escapeHtml(k)}">
-                      <div style="display:flex;justify-content:space-between;align-items:center">
-                        <div><strong style="font-family:monospace">${escapeHtml(keyText)}</strong>
-                          <div style="color:#9aa6b8;font-size:12px;margin-top:6px">id: ${escapeHtml(k)}</div>
-                          <div style="color:#9aa6b8;font-size:12px">${created} · ${escapeHtml(status)} · usage: ${escapeHtml(String(usage))}</div>
-                        </div>
-                        <div style="display:flex;flex-direction:column;gap:8px">
-                          <button class="copyBtn" data-key="${escapeHtml(keyText)}" style="background:#0ea5e9;border-radius:8px;padding:8px;border:none;color:white;cursor:pointer">Copy</button>
-                        </div>
+          // Show name as the main line; clicking the name toggles details (token + copy)
+          html += `<div class="api-key-box" data-id="${escapeHtml(k)}">
+                    <div style="display:flex;justify-content:space-between;align-items:center">
+                      <div>
+                        <div class="keyName" data-id="${escapeHtml(k)}" style="cursor:pointer;font-weight:700">${escapeHtml(name)}</div>
+                        <div style="color:#9aa6b8;font-size:12px;margin-top:6px">id: ${escapeHtml(k)} · ${created} · ${escapeHtml(status)} · usage: ${escapeHtml(String(usage))}</div>
                       </div>
-                    </div>`;
-          } else {
-            html += `<div class="api-key-box" data-id="${escapeHtml(k)}">
-                      <div style="display:flex;justify-content:space-between;align-items:center">
-                        <div><strong style="font-family:monospace">${escapeHtml(keyText)}</strong>
-                          <div style="color:#9aa6b8;font-size:12px;margin-top:6px">id: ${escapeHtml(k)}</div>
-                          <div style="color:#9aa6b8;font-size:12px">${created} · ${escapeHtml(status)} · usage: ${escapeHtml(String(usage))}</div>
-                        </div>
-                        <div style="display:flex;flex-direction:column;gap:8px">
-                          <button class="revokeBtn" data-id="${escapeHtml(k)}" style="background:#f97316;border-radius:8px;padding:8px;border:none;color:white;cursor:pointer">Revoke</button>
-                          <button class="deleteBtn" data-id="${escapeHtml(k)}" style="background:#ef4444;border-radius:8px;padding:8px;border:none;color:white;cursor:pointer">Delete</button>
-                        </div>
+                      <div style="display:flex;flex-direction:column;gap:8px">
+                        <button class="copyBtn" data-key="${escapeHtml(keyText)}" style="background:#0ea5e9;border-radius:8px;padding:8px;border:none;color:white;cursor:pointer">Copy</button>
                       </div>
-                    </div>`;
-          }
+                    </div>
+                    <div class="keyDetails" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.03)">
+                      <div style="font-family:monospace;word-break:break-all">${escapeHtml(keyText)}</div>
+                    </div>
+                  </div>`;
         });
         html += '</div>';
       } else {
@@ -247,39 +273,27 @@
       content.innerHTML = html;
 
       const createBtn = document.getElementById('createKeyBtn');
-      if(createBtn) createBtn.addEventListener('click', createApiKeyForCurrentUser);
+      if(createBtn) createBtn.addEventListener('click', showCreateKeyModal);
 
-      // attach delete/revoke or copy handlers depending on mode
-      if(!isPublicView){
-        document.querySelectorAll('.deleteBtn').forEach(b=> b.addEventListener('click', async (e)=>{
-          const id = e.currentTarget.getAttribute('data-id');
-          if(!confirm('Delete this API key permanently?')) return;
-          try{
-            await remove(ref(db, `api_keys/${id}`));
-          }catch(err){console.error(err);alert('Failed to delete key - see console')}
-        }));
+      // attach copy and name-toggle handlers
+      document.querySelectorAll('.copyBtn').forEach(b=> b.addEventListener('click', async (e)=>{
+        const key = e.currentTarget.getAttribute('data-key') || '';
+        try{
+          await navigator.clipboard.writeText(key);
+          alert('API key copied to clipboard');
+        }catch(_){
+          const ta = document.createElement('textarea'); ta.value = key; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove();
+          alert('API key copied to clipboard');
+        }
+      }));
 
-        document.querySelectorAll('.revokeBtn').forEach(b=> b.addEventListener('click', async (e)=>{
-          const id = e.currentTarget.getAttribute('data-id');
-          if(!confirm('Revoke this API key?')) return;
-          try{
-            await update(ref(db, `api_keys/${id}`), { status: 'revoked' });
-          }catch(err){console.error(err);alert('Failed to revoke key - see console')}
-        }));
-      } else {
-        // public view: attach copy buttons
-        document.querySelectorAll('.copyBtn').forEach(b=> b.addEventListener('click', async (e)=>{
-          const key = e.currentTarget.getAttribute('data-key') || '';
-          try{
-            await navigator.clipboard.writeText(key);
-            alert('API key copied to clipboard');
-          }catch(_){
-            // fallback
-            const ta = document.createElement('textarea'); ta.value = key; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove();
-            alert('API key copied to clipboard');
-          }
-        }));
-      }
+      document.querySelectorAll('.keyName').forEach(n => n.addEventListener('click', (e) =>{
+        const container = e.currentTarget.closest('.api-key-box');
+        if(!container) return;
+        const details = container.querySelector('.keyDetails');
+        if(!details) return;
+        details.style.display = (details.style.display === 'none' || details.style.display === '') ? 'block' : 'none';
+      }));
     }
 
     // Generate a secure-ish API key (client-side). For production, generate on server.
@@ -289,7 +303,7 @@
       return Array.from(arr).map(b => b.toString(16).padStart(2,'0')).join('');
     }
 
-    async function createApiKeyForCurrentUser(){
+    async function createApiKeyForCurrentUser(name){
       const user = auth.currentUser;
       if(!user){ alert('No user signed in.'); return; }
       const uid = user.uid;
@@ -300,6 +314,7 @@
         // Save the API key as the child node itself (so server can look up by token)
         await set(ref(db, `api_keys/${newKey}`), {
           owner: uid,
+          name: name || '',
           created_at: new Date().toISOString(),
           created_at_ts: Date.now(),
           status: 'active',
@@ -317,14 +332,9 @@
     (function wireTopGetKey(){
       const topBtn = document.querySelector('.get-key-btn');
       if(!topBtn) return;
-      topBtn.addEventListener('click', async (e) => {
-        // disable briefly to prevent double clicks
-        topBtn.disabled = true;
-        try {
-          await createApiKeyForCurrentUser();
-        } finally {
-          setTimeout(()=> topBtn.disabled = false, 800);
-        }
+      if(isPublicView){ topBtn.style.display = 'none'; return; }
+      topBtn.addEventListener('click', (e) => {
+        showCreateKeyModal();
       });
     })();
 
