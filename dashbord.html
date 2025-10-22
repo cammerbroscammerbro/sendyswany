@@ -145,7 +145,7 @@
 
   <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
-  import { getDatabase, ref, onValue, push, set, remove, update } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-database.js";
+  import { getDatabase, ref, onValue, set, remove, update } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-database.js";
   import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
 
     const apiBtn = document.getElementById('apiKeyBtn');
@@ -203,9 +203,10 @@
       if(docs.length){
         html += '<div id="userApis">';
         docs.forEach(d => {
-          const k = d.id;
-          const v = d.data;
-          const keyText = v && v.key ? v.key : '';
+            const k = d.id;
+            const v = d.data;
+            // when keys are stored with the key as the node, fall back to the id
+            const keyText = v && v.key ? v.key : k;
           const created = v && v.created_at ? escapeHtml(v.created_at) : '';
           const status = v && v.status ? v.status : 'unknown';
           const usage = (v && typeof v.usage_count !== 'undefined') ? v.usage_count : '';
@@ -296,9 +297,8 @@
 
       const newKey = generateApiKey();
       try{
-        const newRef = push(ref(db, 'api_keys'));
-        await set(newRef, {
-          key: newKey,
+        // Save the API key as the child node itself (so server can look up by token)
+        await set(ref(db, `api_keys/${newKey}`), {
           owner: uid,
           created_at: new Date().toISOString(),
           created_at_ts: Date.now(),
