@@ -181,6 +181,16 @@ console.log(await res.json());</code></pre>
         document.querySelectorAll('[data-lang-panel]').forEach(p => p.style.display = p.getAttribute('data-lang-panel') === lang ? '' : 'none');
       });
     });
+    // Set pretty URL for docs page (/doc) without server changes
+    try{
+      const cur = new URL(window.location.href);
+      const qs = cur.search || '';
+      const pretty = '/doc' + qs;
+      if(location.pathname + location.search !== pretty){
+        history.replaceState(null, '', pretty);
+      }
+    }catch(e){/* ignore */}
   </script>
 </body>
 </html>
+
